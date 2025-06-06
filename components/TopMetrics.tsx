@@ -1,44 +1,55 @@
-'use client';
-
+// TopMetrics.tsx
+import { createClient } from '@/lib/supabaseClient';
 import { useEffect, useState } from 'react';
-import { getClients, getTopMetrics, getHumanEngagementStats } from '@/lib/queries';
+import { DateRange } from 'react-day-picker';
 
-export default function TopMetrics() {
-  const [clientId, setClientId] = useState<string>('client_1');
-  const [startDate] = useState<string>('2024-01-01');
-  const [endDate] = useState<string>('2024-12-31');
-  const [topMetrics, setTopMetrics] = useState<any[]>([]);
-  const [engagementStats, setEngagementStats] = useState<any | null>(null);
+interface TopMetricsProps {
+  clientId: number;
+  dateRange?: DateRange;
+}
+
+export function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
+  const supabase = createClient();
+  const [leadCount, setLeadCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const metrics = await getTopMetrics(clientId, startDate, endDate);
-        setTopMetrics(metrics);
+    async function fetchMetrics() {
+      setLoading(true);
 
-        const engagement = await getHumanEngagementStats(clientId, startDate, endDate);
-        setEngagementStats(engagement);
-      } catch (error) {
-        console.error('Failed to fetch metrics:', error);
+      const fromDate = dateRange?.from?.toISOString();
+      const toDate = dateRange?.to?.toISOString();
+
+      let query = supabase
+        .from('hmstr_leads')
+        .select('id', { count: 'exact' })
+        .eq('client_id', clientId);
+
+      if (fromDate) {
+        query = query.gte('timestamp', fromDate);
       }
+      if (toDate) {
+        query = query.lte('timestamp', toDate);
+      }
+
+      const { count, error } = await query;
+
+      if (error) {
+        console.error('Failed to fetch lead count:', error);
+        setLeadCount(null);
+      } else {
+        setLeadCount(count ?? 0);
+      }
+
+      setLoading(false);
     }
 
-    fetchData();
-  }, [clientId, startDate, endDate]);
+    fetchMetrics();
+  }, [clientId, dateRange]);
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {topMetrics.map((metric) => (
-        <div
-          key={metric.metric_name}
-          className="rounded-lg border bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950"
-        >
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-            {metric.metric_name}
-          </div>
-          <div className="text-2xl font-bold">{metric.metric_value}</div>
-        </div>
-      ))}
+    <div className="mt-4">
+      {loading ? <p>Loading...</p> : <p className="text-lg">Leads: {leadCount}</p>}
     </div>
   );
 }
