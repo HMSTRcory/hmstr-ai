@@ -1,5 +1,5 @@
-import DashboardFilters from '@/components/DashboardFilters'
-import TopMetrics from '@/components/TopMetrics'
+import { DashboardFilters } from '@/components/DashboardFilters';
+import { TopMetrics } from '@/components/TopMetrics';
 
 export default function Home() {
   return (
