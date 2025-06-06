@@ -1,15 +1,16 @@
-// TopMetrics.tsx
-import { createClient } from '@/lib/supabaseClient';
+'use client';
+
 import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface TopMetricsProps {
   clientId: number;
   dateRange?: DateRange;
 }
 
-export function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
-  const supabase = createClient();
+export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
+  const supabase = createClientComponentClient();
   const [leadCount, setLeadCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +26,8 @@ export function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
         .select('id', { count: 'exact' })
         .eq('client_id', clientId);
 
-      if (fromDate) {
-        query = query.gte('timestamp', fromDate);
-      }
-      if (toDate) {
-        query = query.lte('timestamp', toDate);
-      }
+      if (fromDate) query = query.gte('timestamp', fromDate);
+      if (toDate) query = query.lte('timestamp', toDate);
 
       const { count, error } = await query;
 

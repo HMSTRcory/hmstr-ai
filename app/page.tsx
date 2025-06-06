@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <main className="p-6">
       <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
-      <TopMetrics />
+      <TopMetrics clientId={20} dateRange={dateRange} />
     </main>
   );
 }
