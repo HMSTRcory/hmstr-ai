@@ -1,15 +1,12 @@
 import * as React from "react"
+import { format } from "date-fns"
 import { DayPicker } from "react-day-picker"
+import "react-day-picker/dist/style.css"
 import { cn } from "@/lib/utils"
 
-import "react-day-picker/dist/style.css"
+export interface CalendarProps extends React.ComponentProps<typeof DayPicker> {}
 
-export const Calendar = ({
-  className,
-  classNames,
-  showOutsideDays = true,
-  ...props
-}: React.ComponentProps<typeof DayPicker>) => {
+export function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -20,37 +17,42 @@ export const Calendar = ({
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
         nav: "space-x-1 flex items-center",
-        nav_button:
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-transparent transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
-        head_cell:
-          "text-slate-500 rounded-md w-9 font-normal text-[0.8rem]",
+        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
-        cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-slate-100 dark:[&:has([aria-selected])]:bg-slate-800 [&:has([aria-selected])]:rounded-md",
+        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent [&:has([aria-selected])]:text-accent-foreground [&:has([aria-selected])]:rounded-md focus-within:relative focus-within:z-20",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+        day_today: "text-primary",
+        day_outside: "text-muted-foreground opacity-50",
+        day_disabled: "text-muted-foreground opacity-50",
         day_selected:
-          "bg-slate-900 text-slate-50 hover:bg-slate-900 hover:text-slate-50 focus:bg-slate-900 focus:text-slate-50 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50 dark:hover:text-slate-900",
-        day_today: "bg-slate-100 text-slate-900",
-        day_outside: "text-slate-500 opacity-50",
-        day_disabled: "text-slate-500 opacity-50",
-        day_range_middle:
-          "aria-selected:bg-slate-100 aria-selected:text-slate-900",
-        day_range_start:
-          "aria-selected:rounded-s-md aria-selected:bg-slate-900 aria-selected:text-slate-50",
-        day_range_end:
-          "aria-selected:rounded-e-md aria-selected:bg-slate-900 aria-selected:text-slate-50",
-        ...classNames,
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
       }}
       components={{
-        IconLeft: () => <span className="material-symbols-rounded">chevron_left</span>,
-        IconRight: () => <span className="material-symbols-rounded">chevron_right</span>,
+        Navbar: ({ onPreviousClick, onNextClick }) => (
+          <div className="flex justify-between px-2">
+            <button
+              type="button"
+              onClick={onPreviousClick}
+              className="material-symbols-rounded"
+            >
+              chevron_left
+            </button>
+            <button
+              type="button"
+              onClick={onNextClick}
+              className="material-symbols-rounded"
+            >
+              chevron_right
+            </button>
+          </div>
+        ),
       }}
       {...props}
     />
   )
 }
-
-Calendar.displayName = "Calendar"
