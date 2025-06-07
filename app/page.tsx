@@ -31,7 +31,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="p-6 bg-gray-100 text-black max-w-[1200px] mx-auto min-h-screen">
+    <main className="p-6 bg-gray-100 text-black max-w-[800px] mx-auto min-h-screen">
       <div className="mb-4">
         <label htmlFor="client" className="block text-sm font-medium mb-1">
           Select Client
@@ -49,7 +49,6 @@ export default function Home() {
           ))}
         </select>
       </div>
-
       <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
       <TopMetrics clientId={clientId} dateRange={dateRange} />
     </main>
