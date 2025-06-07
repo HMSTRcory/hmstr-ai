@@ -4,78 +4,71 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { DateRange } from "react-day-picker";
 
-const formatDate = (date: Date): string =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .split("T")[0];
-
-type EngagementData = {
-  her_percent: string;
-  aifr_percent: string;
-  human_engaged_true: number;
-  total_engagements: number;
-  ai_forwarded: number;
-  total_forwarded: number;
+type Props = {
+  clientId: number | null;
+  dateRange: DateRange | undefined;
 };
 
-export default function CallEngageMetrics({
-  clientId,
-  dateRange,
-}: {
-  clientId: number;
-  dateRange: DateRange | undefined;
-}) {
-  const [engagementData, setEngagementData] = useState<EngagementData | null>(null);
+export default function CallEngageMetrics({ clientId, dateRange }: Props) {
+  const [metrics, setMetrics] = useState<{
+    her_percent: string;
+    aifr_percent: string;
+    human_engaged_true: number;
+    total_engagements: number;
+    ai_forwarded: number;
+    total_forwarded: number;
+  } | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
+    const fetchMetrics = async () => {
+      if (!clientId || !dateRange?.from || !dateRange?.to) return;
 
-    const fetchEngagementMetrics = async () => {
-      if (clientId && dateRange?.from && dateRange?.to) {
-        try {
-          const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
-            input_client_id: clientId,
-            input_start_date: formatDate(dateRange.from),
-            input_end_date: formatDate(dateRange.to),
-          });
+      const supabase = createClient();
 
-          console.log("📊 Supabase RPC Data:", data);
-          console.log("⚠️ Supabase RPC Error:", error);
+      const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
+        input_client_id: clientId,
+        input_start_date: dateRange.from.toISOString().split("T")[0],
+        input_end_date: dateRange.to.toISOString().split("T")[0],
+      });
 
-          if (error) throw error;
-          if (data && data.length > 0) {
-            setEngagementData(data[0]);
-          } else {
-            setEngagementData(null);
-          }
-        } catch (err) {
-          console.error("❌ Failed to fetch engagement metrics:", err);
-          setEngagementData(null);
-        }
+      console.log("Call Engagement Metrics RPC Response:", data, error);
+
+      if (data && data.length > 0) {
+        setMetrics(data[0]);
       }
     };
 
-    fetchEngagementMetrics();
+    fetchMetrics();
   }, [clientId, dateRange]);
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
-      <div className="grid grid-cols-2 gap-6">
+    <section className="p-4 rounded-lg bg-white shadow">
+      <h2 className="text-lg font-semibold mb-4">Call Engagement Metrics</h2>
+      <div className="grid grid-cols-2 gap-8">
         <div>
-          <p className="text-sm text-muted-foreground">Human Engagement Rate</p>
-          <p className="text-lg font-medium">
-            {engagementData?.her_percent ?? "0.00"}% (
-            {engagementData?.human_engaged_true ?? 0} of{" "}
-            {engagementData?.total_engagements ?? 0})
+          <h3 className="text-sm font-medium text-gray-500 mb-1">
+            Human Engagement Rate (HER)
+          </h3>
+          <p className="text-2xl font-bold">
+            {metrics?.her_percent ?? "0"}%
+          </p>
+          <p className="text-sm text-gray-400">
+            {metrics
+              ? `${metrics.human_engaged_true} of ${metrics.total_engagements} calls were human engaged`
+              : "0 of 0 calls were human engaged"}
           </p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">AI Forward Rate</p>
-          <p className="text-lg font-medium">
-            {engagementData?.aifr_percent ?? "0.00"}% (
-            {engagementData?.ai_forwarded ?? 0} of{" "}
-            {engagementData?.total_forwarded ?? 0})
+          <h3 className="text-sm font-medium text-gray-500 mb-1">
+            AI Forward Rate (AIFR)
+          </h3>
+          <p className="text-2xl font-bold">
+            {metrics?.aifr_percent ?? "0"}%
+          </p>
+          <p className="text-sm text-gray-400">
+            {metrics
+              ? `${metrics.ai_forwarded} of ${metrics.total_forwarded} calls forwarded to AI`
+              : "0 of 0 calls forwarded to AI"}
           </p>
         </div>
       </div>
