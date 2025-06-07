@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-type Props = {
+export interface TopMetricsProps {
   clientId: number;
   dateRange: DateRange | undefined;
-};
+}
 
 interface Metrics {
   her_percent: string | null;
@@ -18,7 +18,7 @@ interface Metrics {
   total_forwarded: number;
 }
 
-export default function CallEngageMetrics({ clientId, dateRange }: Props) {
+export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
   const supabase = createClientComponentClient();
   const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,10 +37,9 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
       });
 
       if (error) {
-        console.error('Supabase RPC Error (CallEngageMetrics):', error.message);
+        console.error('Supabase RPC Error:', error.message);
         setData(null);
       } else {
-        console.log('Call Engagement Metrics RPC Response:', data);
         setData(data?.[0] || null);
       }
 
@@ -50,23 +49,28 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
     fetchMetrics();
   }, [clientId, dateRange]);
 
+  const formatCurrency = (value: number | null) =>
+    value !== null ? `$${Number(value).toFixed(2)}` : '-';
+
+  const formatRange = () => {
+    if (!dateRange?.from || !dateRange?.to) return '-';
+    const from = dateRange.from.toLocaleDateString();
+    const to = dateRange.to.toLocaleDateString();
+    return `${from} - ${to}`;
+  };
+
   return (
-    <section className="bg-white text-black p-6 mt-4 rounded shadow">
-      <h2 className="text-xl font-semibold mb-2">Call Engagement Metrics</h2>
+    <div className="bg-white text-black p-6 mt-4 rounded shadow">
+      <h2 className="text-xl font-semibold mb-2">Top Metrics</h2>
+      <p className="mb-2 text-gray-600">{formatRange()}</p>
       {loading ? (
         <p>Loading...</p>
       ) : (
         <>
-          <p>
-            <strong>HER:</strong> {data?.her_percent ?? '0'}% (
-            {data?.human_engaged_true ?? 0} of {data?.total_engagements ?? 0})
-          </p>
-          <p>
-            <strong>AIFR:</strong> {data?.aifr_percent ?? '0'}% (
-            {data?.ai_forwarded ?? 0} of {data?.total_forwarded ?? 0})
-          </p>
+          <p>HER: {data?.her_percent ?? '0'}</p>
+          <p>AIFR: {data?.aifr_percent ?? '0'}</p>
         </>
       )}
-    </section>
+    </div>
   );
 }
