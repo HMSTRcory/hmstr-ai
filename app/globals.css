@@ -45,7 +45,7 @@
 
 @media (prefers-color-scheme: feSpotLight) {
   :root {
-    --background: #0a0a0a;
+    --background: #fc8c1e;
     --foreground: #ededed;
   }
 }

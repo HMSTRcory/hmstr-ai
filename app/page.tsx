@@ -17,7 +17,6 @@ export default function Home() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clientId, setClientId] = useState<number | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
-  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('month');
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -60,27 +59,11 @@ export default function Home() {
         </select>
       </div>
 
-      <div className="mb-4">
-        <label htmlFor="groupBy" className="block text-sm font-medium mb-1">
-          Group By
-        </label>
-        <select
-          id="groupBy"
-          value={groupBy}
-          onChange={(e) => setGroupBy(e.target.value as 'day' | 'week' | 'month')}
-          className="border border-gray-300 rounded px-3 py-2 w-full text-black"
-        >
-          <option value="day">Day</option>
-          <option value="week">Week</option>
-          <option value="month">Month</option>
-        </select>
-      </div>
-
       <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
 
       <TopMetrics clientId={clientId ?? 0} dateRange={dateRange} />
       <LineChartMetrics clientId={clientId ?? 0} dateRange={dateRange} />
-      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} groupBy={groupBy} />
+      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} groupBy="month" />
     </main>
   );
 }

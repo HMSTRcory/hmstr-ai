@@ -27,13 +27,11 @@ export function DashboardFilters({ dateRange, setDateRange }: DateRangeSelectorP
                 !dateRange && 'text-muted-foreground'
               )}
             >
-
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dateRange?.from ? (
                 dateRange.to ? (
                   <>
-                    {format(dateRange.from, 'LLL dd, y')} -{' '}
-                    {format(dateRange.to, 'LLL dd, y')}
+                    {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
                   </>
                 ) : (
                   format(dateRange.from, 'LLL dd, y')
