@@ -77,8 +77,8 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
           <p>PPC Leads: {data?.qualified_leads_ppc ?? '-'}</p>
           <p>LSA Leads: {data?.qualified_leads_lsa ?? '-'}</p>
           <p>SEO Leads: {data?.qualified_leads_seo ?? '-'}</p>
-          <p>Total Spend: {formatCurrency(data?.spend_total)}</p>
-          <p>CPQL Total: {formatCurrency(data?.cpql_total)}</p>
+          <p>Total Spend: {formatCurrency(data?.spend_total ?? null)}</p>
+          <p>CPQL Total: {formatCurrency(data?.cpql_total ?? null)}</p>
         </>
       )}
     </div>
