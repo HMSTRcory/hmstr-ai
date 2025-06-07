@@ -33,8 +33,21 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
     const fetchMetrics = async () => {
       if (!dateRange?.from || !dateRange?.to) return;
 
-      const start = dateRange.from.toISOString().slice(0, 10); // '2025-01-01'
-      const end = dateRange.to.toISOString().slice(0, 10);     // '2025-05-31'
+      const start = new Date(
+        dateRange.from.getFullYear(),
+        dateRange.from.getMonth(),
+        dateRange.from.getDate()
+      )
+        .toISOString()
+        .slice(0, 10);
+
+      const end = new Date(
+        dateRange.to.getFullYear(),
+        dateRange.to.getMonth(),
+        dateRange.to.getDate()
+      )
+        .toISOString()
+        .slice(0, 10);
 
       const { data, error } = await supabase.rpc('get_top_metrics', {
         input_client_id: clientId,
@@ -46,7 +59,7 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
         console.error('Supabase RPC Error:', error.message);
         setData(null);
       } else {
-        setData(data?.[0] || null); // 👈 Fix: Use first element from array
+        setData(data?.[0] || null);
       }
 
       setLoading(false);
@@ -78,6 +91,7 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
           <p>LSA Leads: {data?.qualified_leads_lsa ?? '-'}</p>
           <p>SEO Leads: {data?.qualified_leads_seo ?? '-'}</p>
           <p>Total Spend: {formatCurrency(data?.spend_total ?? null)}</p>
+          <p>Total PPC Spend: {formatCurrency(data?.spend_ppc ?? null)}</p>
           <p>CPQL Total: {formatCurrency(data?.cpql_total ?? null)}</p>
         </>
       )}
