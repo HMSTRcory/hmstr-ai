@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import TopMetrics from '@/components/TopMetrics';
+import LineChartMetrics from '@/components/LineChartMetrics';
 import { DateRange } from 'react-day-picker';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 
 interface Client {
   client_id: number;
@@ -16,21 +17,24 @@ export default function Home() {
   const [clientId, setClientId] = useState<number | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
 
-  const supabase = createClientComponentClient();
-
   useEffect(() => {
     const fetchClients = async () => {
-      const { data, error } = await supabase.from('clients_ffs').select('client_id, cr_company_name');
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('clients_ffs')
+        .select('client_id, cr_company_name');
+
       if (error) {
-        console.error('Error loading clients:', error.message);
-      } else {
-        console.log('Clients fetched:', data);
-        setClients(data || []);
-        if (data && data.length > 0) {
-          setClientId(data[0].client_id);
-        }
+        console.error('Error fetching clients:', error);
+        return;
+      }
+
+      setClients(data);
+      if (!clientId && data.length > 0) {
+        setClientId(data[0].client_id);
       }
     };
+
     fetchClients();
   }, []);
 
@@ -53,8 +57,11 @@ export default function Home() {
           ))}
         </select>
       </div>
+
       <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
+
       <TopMetrics clientId={clientId ?? 0} dateRange={dateRange} />
+      <LineChartMetrics clientId={clientId ?? 0} dateRange={dateRange} />
     </main>
   );
 }
