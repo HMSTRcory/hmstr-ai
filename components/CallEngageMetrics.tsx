@@ -59,9 +59,9 @@ export default function CallEngageMetrics({
   }, [clientId, dateRange]);
 
   return (
-    <section>
+    <section className="space-y-4">
       <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-6">
         <div>
           <p className="text-sm text-muted-foreground">Human Engagement Rate</p>
           <p className="text-lg font-medium">
