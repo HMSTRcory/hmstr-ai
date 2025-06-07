@@ -31,27 +31,34 @@ export default function CallEngageMetrics({
   );
 
   useEffect(() => {
-    const fetchEngagementMetrics = async () => {
-      const supabase = createClient();
+    if (clientId && dateRange?.from && dateRange?.to) {
+      const fetchData = async () => {
+        try {
+          const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
+            input_client_id: clientId,
+            input_start_date: formatDate(dateRange.from),
+            input_end_date: formatDate(dateRange.to),
+          });
 
-      if (!clientId || !dateRange?.from || !dateRange?.to) {
-        console.warn("Missing clientId or date range for CallEngageMetrics.");
-        return;
-      }
+          console.log("📊 Supabase RPC Data:", data);
+          console.log("⚠️ Supabase RPC Error:", error);
 
-      const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
-        input_client_id: clientId,
-        input_start_date: formatDate(dateRange.from),
-        input_end_date: formatDate(dateRange.to),
-      });
+          if (error) throw error;
+          if (data && data.length > 0) {
+            setMetrics(data[0]);
+          } else {
+            setMetrics(null);
+          }
+        } catch (err) {
+          console.error("❌ Failed to fetch engagement metrics:", err);
+          setMetrics(null);
+        }
+      };
 
-      if (error) {
-        console.error("Error fetching call engagement metrics:", error);
-      } else {
-        console.log("Call engagement data:", data);
-        setEngagementData(data?.[0] ?? null);
-      }
-    };
+      fetchData();
+    }
+  }, [clientId, dateRange]);
+
 
     fetchEngagementMetrics();
   }, [clientId, dateRange]);
