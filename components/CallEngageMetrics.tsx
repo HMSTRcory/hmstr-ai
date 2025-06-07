@@ -37,30 +37,39 @@ export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMet
         return;
       }
 
-      setData(data?.[0] ?? null);
+      setData(data?.[0] ?? {
+        her_percent: '–',
+        aifr_percent: '–',
+        human_engaged_true: 0,
+        total_engagements: 0,
+        ai_forwarded: 0,
+        total_forwarded: 0,
+      });
     };
 
     fetchData();
   }, [clientId, dateRange]);
 
-  if (!data) return null;
-
   return (
-    <div className="bg-white rounded shadow p-6">
+    <div className="bg-white rounded shadow p-6 mt-6">
       <h2 className="text-xl font-semibold mb-4">Call Engagement Metrics</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <p className="text-sm text-gray-600">Human Engagement Rate (HER)</p>
-          <p className="text-2xl font-bold">{data.her_percent}%</p>
+          <p className="text-2xl font-bold">
+            {data?.total_engagements ? `${data.her_percent}%` : '–'}
+          </p>
           <p className="text-sm text-gray-500">
-            {data.human_engaged_true} of {data.total_engagements} calls were human engaged
+            {data?.human_engaged_true} of {data?.total_engagements} calls were human engaged
           </p>
         </div>
         <div>
           <p className="text-sm text-gray-600">AI Forward Rate (AIFR)</p>
-          <p className="text-2xl font-bold">{data.aifr_percent}%</p>
+          <p className="text-2xl font-bold">
+            {data?.total_forwarded ? `${data.aifr_percent}%` : '–'}
+          </p>
           <p className="text-sm text-gray-500">
-            {data.ai_forwarded} of {data.total_forwarded} calls forwarded to AI
+            {data?.ai_forwarded} of {data?.total_forwarded} calls forwarded to AI
           </p>
         </div>
       </div>
