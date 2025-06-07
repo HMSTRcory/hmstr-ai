@@ -23,10 +23,11 @@ export function DashboardFilters({ dateRange, setDateRange }: DateRangeSelectorP
               id="date"
               variant={'outline'}
               className={cn(
-                'w-full justify-start text-left font-normal',
+                'w-full justify-start text-left font-normal text-black',
                 !dateRange && 'text-muted-foreground'
               )}
             >
+
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dateRange?.from ? (
                 dateRange.to ? (
@@ -42,8 +43,9 @@ export function DashboardFilters({ dateRange, setDateRange }: DateRangeSelectorP
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 text-black bg-white" align="start">
             <Calendar
+              className="text-black"
               mode="range"
               defaultMonth={dateRange?.from}
               selected={dateRange}
