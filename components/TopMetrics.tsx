@@ -33,8 +33,8 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
     const fetchMetrics = async () => {
       if (!dateRange?.from || !dateRange?.to) return;
 
-      const start = dateRange.from.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
-      const end = dateRange.to.toLocaleDateString('en-CA');     // 'YYYY-MM-DD'
+      const start = dateRange.from.toLocaleDateString('en-CA');
+      const end = dateRange.to.toLocaleDateString('en-CA');
 
       const { data, error } = await supabase.rpc('get_top_metrics', {
         input_client_id: clientId,
@@ -56,7 +56,7 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
   }, [clientId, dateRange]);
 
   const formatCurrency = (value: number | null) =>
-    value !== null ? `$${value.toFixed(2)}` : '-';
+    value !== null ? `$${Number(value).toFixed(2)}` : '-';
 
   const formatRange = () => {
     if (!dateRange?.from || !dateRange?.to) return '-';
@@ -79,7 +79,12 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
           <p>SEO Leads: {data?.qualified_leads_seo ?? '-'}</p>
           <p>Total Spend: {formatCurrency(data?.spend_total ?? null)}</p>
           <p>Total PPC Spend: {formatCurrency(data?.spend_ppc ?? null)}</p>
+          <p>LSA Spend: {formatCurrency(data?.spend_lsa ?? null)}</p>
+          <p>SEO Spend: {formatCurrency(data?.spend_seo ?? null)}</p>
           <p>CPQL Total: {formatCurrency(data?.cpql_total ?? null)}</p>
+          <p>CPQL PPC: {formatCurrency(data?.cpql_ppc ?? null)}</p>
+          <p>CPQL LSA: {formatCurrency(data?.cpql_lsa ?? null)}</p>
+          <p>CPQL SEO: {formatCurrency(data?.cpql_seo ?? null)}</p>
         </>
       )}
     </div>
