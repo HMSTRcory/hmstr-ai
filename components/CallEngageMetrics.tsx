@@ -67,8 +67,8 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
         <p>Loading...</p>
       ) : (
         <>
-          <p>HER: {data?.her_percent ?? '0'}</p>
-          <p>AIFR: {data?.aifr_percent ?? '0'}</p>
+          <p>HER: {data?.her_percent ?? '-'}</p>
+          <p>AIFR: {data?.aifr_percent ?? '-'}</p>
         </>
       )}
     </div>
