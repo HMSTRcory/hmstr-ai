@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { DateRange } from "react-day-picker";
 
-// Ensures no timezone skewing in ISO date formatting
 const formatDate = (date: Date): string =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
     .toISOString()
@@ -26,13 +25,13 @@ export default function CallEngageMetrics({
   clientId: number;
   dateRange: DateRange | undefined;
 }) {
-  const [engagementData, setEngagementData] = useState<EngagementData | null>(
-    null
-  );
+  const [engagementData, setEngagementData] = useState<EngagementData | null>(null);
 
   useEffect(() => {
-    if (clientId && dateRange?.from && dateRange?.to) {
-      const fetchData = async () => {
+    const supabase = createClient();
+
+    const fetchEngagementMetrics = async () => {
+      if (clientId && dateRange?.from && dateRange?.to) {
         try {
           const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
             input_client_id: clientId,
@@ -45,20 +44,16 @@ export default function CallEngageMetrics({
 
           if (error) throw error;
           if (data && data.length > 0) {
-            setMetrics(data[0]);
+            setEngagementData(data[0]);
           } else {
-            setMetrics(null);
+            setEngagementData(null);
           }
         } catch (err) {
           console.error("❌ Failed to fetch engagement metrics:", err);
-          setMetrics(null);
+          setEngagementData(null);
         }
-      };
-
-      fetchData();
-    }
-  }, [clientId, dateRange]);
-
+      }
+    };
 
     fetchEngagementMetrics();
   }, [clientId, dateRange]);
