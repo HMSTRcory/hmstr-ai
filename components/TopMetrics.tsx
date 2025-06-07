@@ -33,21 +33,8 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
     const fetchMetrics = async () => {
       if (!dateRange?.from || !dateRange?.to) return;
 
-      const start = new Date(
-        dateRange.from.getFullYear(),
-        dateRange.from.getMonth(),
-        dateRange.from.getDate()
-      )
-        .toISOString()
-        .slice(0, 10);
-
-      const end = new Date(
-        dateRange.to.getFullYear(),
-        dateRange.to.getMonth(),
-        dateRange.to.getDate()
-      )
-        .toISOString()
-        .slice(0, 10);
+      const start = dateRange.from.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+      const end = dateRange.to.toLocaleDateString('en-CA');     // 'YYYY-MM-DD'
 
       const { data, error } = await supabase.rpc('get_top_metrics', {
         input_client_id: clientId,
