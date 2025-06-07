@@ -1,77 +1,72 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { DateRange } from "react-day-picker";
+import { useEffect, useState } from 'react';
+import { DateRange } from 'react-day-picker';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type Props = {
-  clientId: number | null;
+  clientId: number;
   dateRange: DateRange | undefined;
 };
 
+interface Metrics {
+  her_percent: string | null;
+  aifr_percent: string | null;
+  human_engaged_true: number;
+  total_engagements: number;
+  ai_forwarded: number;
+  total_forwarded: number;
+}
+
 export default function CallEngageMetrics({ clientId, dateRange }: Props) {
-  const [metrics, setMetrics] = useState<{
-    her_percent: string;
-    aifr_percent: string;
-    human_engaged_true: number;
-    total_engagements: number;
-    ai_forwarded: number;
-    total_forwarded: number;
-  } | null>(null);
+  const supabase = createClientComponentClient();
+  const [data, setData] = useState<Metrics | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      if (!clientId || !dateRange?.from || !dateRange?.to) return;
+      if (!dateRange?.from || !dateRange?.to) return;
 
-      const supabase = createClient();
+      const start = dateRange.from.toLocaleDateString('en-CA');
+      const end = dateRange.to.toLocaleDateString('en-CA');
 
-      const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
+      const { data, error } = await supabase.rpc('get_call_engagement_metrics', {
         input_client_id: clientId,
-        input_start_date: dateRange.from.toISOString().split("T")[0],
-        input_end_date: dateRange.to.toISOString().split("T")[0],
+        input_start_date: start,
+        input_end_date: end,
       });
 
-      console.log("Call Engagement Metrics RPC Response:", data, error);
-
-      if (data && data.length > 0) {
-        setMetrics(data[0]);
+      if (error) {
+        console.error('Supabase RPC Error (CallEngageMetrics):', error.message);
+        setData(null);
+      } else {
+        console.log('Call Engagement Metrics RPC Response:', data);
+        setData(data?.[0] || null);
       }
+
+      setLoading(false);
     };
 
     fetchMetrics();
   }, [clientId, dateRange]);
 
   return (
-    <section className="p-4 rounded-lg bg-white shadow">
-      <h2 className="text-lg font-semibold mb-4">Call Engagement Metrics</h2>
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-1">
-            Human Engagement Rate (HER)
-          </h3>
-          <p className="text-2xl font-bold">
-            {metrics?.her_percent ?? "0"}%
+    <section className="bg-white text-black p-6 mt-4 rounded shadow">
+      <h2 className="text-xl font-semibold mb-2">Call Engagement Metrics</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <>
+          <p>
+            <strong>HER:</strong> {data?.her_percent ?? '0'}% (
+            {data?.human_engaged_true ?? 0} of {data?.total_engagements ?? 0})
           </p>
-          <p className="text-sm text-gray-400">
-            {metrics
-              ? `${metrics.human_engaged_true} of ${metrics.total_engagements} calls were human engaged`
-              : "0 of 0 calls were human engaged"}
+          <p>
+            <strong>AIFR:</strong> {data?.aifr_percent ?? '0'}% (
+            {data?.ai_forwarded ?? 0} of {data?.total_forwarded ?? 0})
           </p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-1">
-            AI Forward Rate (AIFR)
-          </h3>
-          <p className="text-2xl font-bold">
-            {metrics?.aifr_percent ?? "0"}%
-          </p>
-          <p className="text-sm text-gray-400">
-            {metrics
-              ? `${metrics.ai_forwarded} of ${metrics.total_forwarded} calls forwarded to AI`
-              : "0 of 0 calls forwarded to AI"}
-          </p>
-        </div>
-      </div>
+        </>
+      )}
     </section>
   );
 }
