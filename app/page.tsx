@@ -8,7 +8,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Client {
   client_id: number;
-  name: string;
+  cr_company_name: string;
 }
 
 export default function Home() {
@@ -20,13 +20,14 @@ export default function Home() {
 
   useEffect(() => {
     const fetchClients = async () => {
-      const { data, error } = await supabase.from('clients_ffs').select('client_id, name');
+      const { data, error } = await supabase.from('clients_ffs').select('client_id, cr_company_name');
       if (error) {
         console.error('Error loading clients:', error.message);
       } else {
+        console.log('Clients fetched:', data);
         setClients(data || []);
         if (data && data.length > 0) {
-          setClientId(data[0].client_id); // Auto-select first client
+          setClientId(data[0].client_id);
         }
       }
     };
@@ -47,7 +48,7 @@ export default function Home() {
         >
           {clients.map((client) => (
             <option key={client.client_id} value={client.client_id}>
-              {client.name}
+              {client.cr_company_name}
             </option>
           ))}
         </select>
