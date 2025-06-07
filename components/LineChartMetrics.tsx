@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { createClient } from '@/utils/supabase/client';
 import { DateRange } from 'react-day-picker';
 
@@ -19,6 +27,7 @@ interface Props {
 
 export default function LineChartMetrics({ clientId, dateRange }: Props) {
   const [data, setData] = useState<LineData[]>([]);
+  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day');
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -29,7 +38,7 @@ export default function LineChartMetrics({ clientId, dateRange }: Props) {
         input_client_id: clientId,
         input_start_date: dateRange.from.toISOString().split('T')[0],
         input_end_date: dateRange.to.toISOString().split('T')[0],
-        input_group_by: 'day',
+        input_group_by: groupBy,
       });
 
       if (error) {
@@ -41,11 +50,22 @@ export default function LineChartMetrics({ clientId, dateRange }: Props) {
     };
 
     fetchChartData();
-  }, [clientId, dateRange]);
+  }, [clientId, dateRange, groupBy]);
 
   return (
-    <div className="w-full h-[400px] mt-8 bg-white p-4 rounded-xl shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Daily Spend Breakdown</h2>
+    <div className="w-full h-[450px] mt-8 bg-white p-6 rounded-xl shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Qualified Leads by Period</h2>
+        <select
+          className="border rounded-md px-2 py-1 text-sm"
+          value={groupBy}
+          onChange={(e) => setGroupBy(e.target.value as 'day' | 'week' | 'month')}
+        >
+          <option value="day">Day</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+        </select>
+      </div>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <XAxis dataKey="group_date" />
