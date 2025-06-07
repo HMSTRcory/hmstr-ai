@@ -1,27 +1,40 @@
-// TopMetrics.tsx
+'use client';
 
+import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useEffect, useState } from 'react';
 
-interface TopMetricsProps {
+export interface TopMetricsProps {
   clientId: number;
-  dateRange?: DateRange;
+  dateRange: DateRange | undefined;
+}
+
+interface Metrics {
+  qualified_leads: number | null;
+  qualified_leads_ppc: number | null;
+  qualified_leads_lsa: number | null;
+  qualified_leads_seo: number | null;
+  spend_ppc: number | null;
+  spend_lsa: number | null;
+  spend_seo: number | null;
+  spend_total: number | null;
+  cpql_ppc: number | null;
+  cpql_lsa: number | null;
+  cpql_seo: number | null;
+  cpql_total: number | null;
 }
 
 export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
   const supabase = createClientComponentClient();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      setLoading(true);
+      if (!dateRange?.from || !dateRange?.to) return;
 
-      const start = dateRange?.from?.toISOString().slice(0, 10);
-      const end = dateRange?.to?.toISOString().slice(0, 10);
-
-      if (!start || !end) return;
+      const start = dateRange.from.toISOString().slice(0, 10);
+      const end = dateRange.to.toISOString().slice(0, 10);
 
       const { data, error } = await supabase.rpc('get_top_metrics', {
         input_client_id: clientId,
@@ -30,7 +43,8 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
       });
 
       if (error) {
-        console.error('Error fetching metrics:', error);
+        console.error('Supabase RPC Error:', error.message);
+        setData(null);
       } else {
         setData(data);
       }
@@ -38,32 +52,34 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
       setLoading(false);
     };
 
-    if (dateRange?.from && dateRange?.to) {
-      fetchMetrics();
-    }
-  }, [clientId, dateRange, supabase]);
+    fetchMetrics();
+  }, [clientId, dateRange]);
 
-  const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
+  const formatCurrency = (value: number | null) =>
+    value !== null ? `$${value.toFixed(2)}` : '-';
+
+  const formatRange = () => {
+    if (!dateRange?.from || !dateRange?.to) return '-';
+    const from = dateRange.from.toLocaleDateString();
+    const to = dateRange.to.toLocaleDateString();
+    return `${from} - ${to}`;
+  };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">
-        {dateRange?.from && dateRange?.to
-          ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
-          : 'Select a date range'}
-      </h2>
-
+    <div className="bg-white text-black p-6 mt-4 rounded shadow">
+      <h2 className="text-xl font-semibold mb-2">Top Metrics</h2>
+      <p className="mb-2 text-gray-600">{formatRange()}</p>
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div>
+        <>
           <p>Leads: {data?.qualified_leads ?? '-'}</p>
           <p>PPC Leads: {data?.qualified_leads_ppc ?? '-'}</p>
           <p>LSA Leads: {data?.qualified_leads_lsa ?? '-'}</p>
           <p>SEO Leads: {data?.qualified_leads_seo ?? '-'}</p>
           <p>Total Spend: {formatCurrency(data?.spend_total ?? 0)}</p>
           <p>CPQL Total: {formatCurrency(data?.cpql_total ?? 0)}</p>
-        </div>
+        </>
       )}
     </div>
   );
