@@ -9,10 +9,9 @@ import { createClient } from '@/utils/supabase/client';
 interface LineChartCostProps {
   clientId: number;
   dateRange?: DateRange;
-  groupBy: string;
 }
 
-export function LineChartCost({ clientId, dateRange, groupBy }: LineChartCostProps) {
+export default function LineChartCost({ clientId, dateRange }: LineChartCostProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +29,7 @@ export function LineChartCost({ clientId, dateRange, groupBy }: LineChartCostPro
         input_client_id: clientId,
         input_start_date: dateRange.from.toISOString().split('T')[0],
         input_end_date: dateRange.to.toISOString().split('T')[0],
-        input_group_by: groupBy,
+        input_group_by: 'month', // ← hardcoded to 'month'
       });
 
       if (error) {
@@ -43,7 +42,7 @@ export function LineChartCost({ clientId, dateRange, groupBy }: LineChartCostPro
     };
 
     fetchData();
-  }, [clientId, dateRange, groupBy, supabase]);
+  }, [clientId, dateRange, supabase]);
 
   return (
     <Card className="mt-6">
