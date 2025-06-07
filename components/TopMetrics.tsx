@@ -54,3 +54,6 @@ export default function Home() {
     </main>
   );
 }
+export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
+  // ... component logic
+}
