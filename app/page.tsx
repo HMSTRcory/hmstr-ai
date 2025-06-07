@@ -53,12 +53,8 @@ export default function Home() {
           ))}
         </select>
       </div>
-      {clientId !== null && (
-        <>
-          <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
-          <TopMetrics clientId={clientId} dateRange={dateRange} />
-        </>
-      )}
+      <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
+      <TopMetrics clientId={clientId ?? 0} dateRange={dateRange} />
     </main>
   );
 }
