@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from 'recharts';
 import { DateRange } from 'react-day-picker';
 import { createClient } from '@/utils/supabase/client';
 
@@ -14,14 +22,11 @@ interface LineChartCostProps {
 export default function LineChartCost({ clientId, dateRange }: LineChartCostProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-
   const supabase = createClient();
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!clientId || !dateRange?.from || !dateRange?.to) {
-        return;
-      }
+      if (!clientId || !dateRange?.from || !dateRange?.to) return;
 
       setLoading(true);
 
@@ -29,7 +34,7 @@ export default function LineChartCost({ clientId, dateRange }: LineChartCostProp
         input_client_id: clientId,
         input_start_date: dateRange.from.toISOString().split('T')[0],
         input_end_date: dateRange.to.toISOString().split('T')[0],
-        input_group_by: 'month', // ← hardcoded to 'month'
+        input_group_by: 'month', // Hardcoded to "month"
       });
 
       if (error) {

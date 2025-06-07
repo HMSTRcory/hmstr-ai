@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import TopMetrics from '@/components/TopMetrics';
 import LineChartMetrics from '@/components/LineChartMetrics';
-import { LineChartCost } from '@/components/LineChartCost';
+import LineChartCost from '@/components/LineChartCost';
 import { DateRange } from 'react-day-picker';
 import { createClient } from '@/utils/supabase/client';
 
@@ -63,7 +63,7 @@ export default function Home() {
 
       <TopMetrics clientId={clientId ?? 0} dateRange={dateRange} />
       <LineChartMetrics clientId={clientId ?? 0} dateRange={dateRange} />
-      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} groupBy="month" />
+      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} />
     </main>
   );
 }
