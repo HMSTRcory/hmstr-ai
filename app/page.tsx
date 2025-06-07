@@ -13,7 +13,7 @@ interface Client {
 
 export default function Home() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [clientId, setClientId] = useState<number>(20);
+  const [clientId, setClientId] = useState<number | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
 
   const supabase = createClientComponentClient();
@@ -25,20 +25,23 @@ export default function Home() {
         console.error('Error loading clients:', error.message);
       } else {
         setClients(data || []);
+        if (data && data.length > 0) {
+          setClientId(data[0].client_id); // Auto-select first client
+        }
       }
     };
     fetchClients();
   }, []);
 
   return (
-    <main className="p-6 bg-gray-100 text-black max-w-[800px] mx-auto min-h-screen">
+    <main className="p-6 bg-gray-100 text-black max-w-[1200px] mx-auto min-h-screen">
       <div className="mb-4">
         <label htmlFor="client" className="block text-sm font-medium mb-1">
           Select Client
         </label>
         <select
           id="client"
-          value={clientId}
+          value={clientId ?? ''}
           onChange={(e) => setClientId(Number(e.target.value))}
           className="border border-gray-300 rounded px-3 py-2 w-full text-black"
         >
@@ -49,8 +52,12 @@ export default function Home() {
           ))}
         </select>
       </div>
-      <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
-      <TopMetrics clientId={clientId} dateRange={dateRange} />
+      {clientId !== null && (
+        <>
+          <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
+          <TopMetrics clientId={clientId} dateRange={dateRange} />
+        </>
+      )}
     </main>
   );
 }
