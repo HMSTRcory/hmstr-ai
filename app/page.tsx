@@ -6,7 +6,7 @@ import LineChartCost from "@/components/LineChartCost";
 import { DateRange } from "react-day-picker";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-import DashboardFilters from "@/components/DashboardFilters";
+import { DashboardFilters } from "@/components/DashboardFilters";
 
 export default function Page() {
   const [clientId, setClientId] = useState<number | null>(20);
