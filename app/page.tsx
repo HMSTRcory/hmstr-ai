@@ -1,82 +1,71 @@
-"use client";
+'use client';
 
-import TopMetrics from "@/components/TopMetrics";
-import LineChartMetrics from "@/components/LineChartMetrics";
-import LineChartCost from "@/components/LineChartCost";
-import { DateRange } from "react-day-picker";
-import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
-import { DashboardFilters } from "@/components/DashboardFilters";
+import { useEffect, useState } from 'react';
+import { DashboardFilters } from '@/components/DashboardFilters';
+import TopMetrics from '@/components/TopMetrics';
+import CallEngageMetrics from '@/components/CallEngageMetrics';
+import LineChartMetrics from '@/components/LineChartMetrics';
+import LineChartCost from '@/components/LineChartCost';
+import { DateRange } from 'react-day-picker';
+import { createClient } from '@/utils/supabase/client';
 
-export default function Page() {
-  const [clientId, setClientId] = useState<number | null>(20);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [callMetrics, setCallMetrics] = useState<any>(null);
+interface Client {
+  client_id: number;
+  cr_company_name: string;
+}
+
+export default function Home() {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [clientId, setClientId] = useState<number | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
-    const fetchCallEngagement = async () => {
-      if (!clientId || !dateRange?.from || !dateRange?.to) return;
+    const fetchClients = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
-        input_client_id: clientId,
-        input_start_date: dateRange.from.toISOString().split("T")[0],
-        input_end_date: dateRange.to.toISOString().split("T")[0],
-      });
-      if (!error) {
-        setCallMetrics(data[0]);
+      const { data, error } = await supabase
+        .from('clients_ffs')
+        .select('client_id, cr_company_name');
+
+      if (error) {
+        console.error('Error fetching clients:', error);
+        return;
+      }
+
+      setClients(data);
+      if (!clientId && data.length > 0) {
+        setClientId(data[0].client_id);
       }
     };
-    fetchCallEngagement();
-  }, [clientId, dateRange]);
+
+    fetchClients();
+  }, []);
 
   return (
-    <main className="space-y-8 p-6">
-      <DashboardFilters
-        clientId={clientId}
-        setClientId={setClientId}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-      />
+    <main className="p-6 bg-gray-100 text-black max-w-[1200px] mx-auto min-h-screen">
+      <div className="mb-4">
+        <label htmlFor="client" className="block text-sm font-medium mb-1">
+          Select Client
+        </label>
+        <select
+          id="client"
+          value={clientId ?? ''}
+          onChange={(e) => setClientId(Number(e.target.value))}
+          className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+        >
+          {clients.map((client) => (
+            <option key={client.client_id} value={client.client_id}>
+              {client.cr_company_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <DashboardFilters dateRange={dateRange} setDateRange={setDateRange} />
 
       <TopMetrics clientId={clientId ?? 0} dateRange={dateRange} />
-
-      {/* 📞 Call Engagement Metrics Section */}
-      {callMetrics && (
-        <div className="rounded-2xl border p-6 shadow-sm bg-white">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Call Engagement Metrics
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-gray-700">
-            <div>
-              <div className="text-gray-500">Human Engage Rate</div>
-              <div className="text-lg font-medium">{callMetrics.her_percent}%</div>
-            </div>
-            <div>
-              <div className="text-gray-500">AI Forward Rate</div>
-              <div className="text-lg font-medium">{callMetrics.aifr_percent}%</div>
-            </div>
-            <div>
-              <div className="text-gray-500">Humans Engaged</div>
-              <div className="text-lg font-medium">{callMetrics.human_engaged_true}</div>
-            </div>
-            <div>
-              <div className="text-gray-500">Total Engagements</div>
-              <div className="text-lg font-medium">{callMetrics.total_engagements}</div>
-            </div>
-            <div>
-              <div className="text-gray-500">AI Forwarded</div>
-              <div className="text-lg font-medium">{callMetrics.ai_forwarded}</div>
-            </div>
-            <div>
-              <div className="text-gray-500">Total Forwarded</div>
-              <div className="text-lg font-medium">{callMetrics.total_forwarded}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <CallEngageMetrics clientId={clientId ?? 0} dateRange={dateRange} />
       <LineChartMetrics clientId={clientId ?? 0} dateRange={dateRange} />
-      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} groupBy="month" />
+      <LineChartCost clientId={clientId ?? 0} dateRange={dateRange} />
     </main>
   );
 }

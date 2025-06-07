@@ -1,55 +1,69 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from 'react';
+import { DateRange } from 'react-day-picker';
+import { createClient } from '@/utils/supabase/client';
 
 interface CallEngageMetricsProps {
-  herPercent?: string;
-  aifrPercent?: string;
-  humanEngagedTrue?: number;
-  totalEngagements?: number;
-  aiForwarded?: number;
-  totalForwarded?: number;
+  clientId: number;
+  dateRange?: DateRange;
 }
 
-export default function CallEngageMetrics({
-  herPercent,
-  aifrPercent,
-  humanEngagedTrue,
-  totalEngagements,
-  aiForwarded,
-  totalForwarded,
-}: CallEngageMetricsProps) {
+interface CallEngageData {
+  her_percent: string;
+  aifr_percent: string;
+  human_engaged_true: number;
+  total_engagements: number;
+  ai_forwarded: number;
+  total_forwarded: number;
+}
+
+export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMetricsProps) {
+  const [data, setData] = useState<CallEngageData | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!dateRange?.from || !dateRange?.to) return;
+
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('get_call_engagement_metrics', {
+        input_client_id: clientId,
+        input_start_date: dateRange.from.toISOString().split('T')[0],
+        input_end_date: dateRange.to.toISOString().split('T')[0]
+      });
+
+      if (error) {
+        console.error('Error fetching call engagement metrics:', error);
+        return;
+      }
+
+      setData(data?.[0] ?? null);
+    };
+
+    fetchData();
+  }, [clientId, dateRange]);
+
+  if (!data) return null;
+
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Call Engagement Metrics</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="bg-white rounded shadow p-6">
+      <h2 className="text-xl font-semibold mb-4">Call Engagement Metrics</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Human Engagement Rate</p>
-          <p className="text-lg font-medium">{herPercent ?? "--"}%</p>
+          <p className="text-sm text-gray-600">Human Engagement Rate (HER)</p>
+          <p className="text-2xl font-bold">{data.her_percent}%</p>
+          <p className="text-sm text-gray-500">
+            {data.human_engaged_true} of {data.total_engagements} calls were human engaged
+          </p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">AI Forward Rate</p>
-          <p className="text-lg font-medium">{aifrPercent ?? "--"}%</p>
+          <p className="text-sm text-gray-600">AI Forward Rate (AIFR)</p>
+          <p className="text-2xl font-bold">{data.aifr_percent}%</p>
+          <p className="text-sm text-gray-500">
+            {data.ai_forwarded} of {data.total_forwarded} calls forwarded to AI
+          </p>
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Humans Engaged</p>
-          <p className="text-lg font-medium">{humanEngagedTrue ?? "--"}</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Total Engagements</p>
-          <p className="text-lg font-medium">{totalEngagements ?? "--"}</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">AI Forwarded</p>
-          <p className="text-lg font-medium">{aiForwarded ?? "--"}</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Total Forwarded</p>
-          <p className="text-lg font-medium">{totalForwarded ?? "--"}</p>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
