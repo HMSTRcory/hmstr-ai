@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { DateRange } from "react-day-picker";
 
+// Ensures no timezone skewing in ISO date formatting
+const formatDate = (date: Date): string =>
+  new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+
 type EngagementData = {
   her_percent: string;
   aifr_percent: string;
@@ -26,14 +32,17 @@ export default function CallEngageMetrics({
 
   useEffect(() => {
     const fetchEngagementMetrics = async () => {
-      if (!clientId || !dateRange?.from || !dateRange?.to) return;
-
       const supabase = createClient();
+
+      if (!clientId || !dateRange?.from || !dateRange?.to) {
+        console.warn("Missing clientId or date range for CallEngageMetrics.");
+        return;
+      }
 
       const { data, error } = await supabase.rpc("get_call_engagement_metrics", {
         input_client_id: clientId,
-        input_start_date: dateRange.from.toISOString().split("T")[0],
-        input_end_date: dateRange.to.toISOString().split("T")[0],
+        input_start_date: formatDate(dateRange.from),
+        input_end_date: formatDate(dateRange.to),
       });
 
       if (error) {
@@ -47,35 +56,25 @@ export default function CallEngageMetrics({
     fetchEngagementMetrics();
   }, [clientId, dateRange]);
 
-  if (!engagementData) {
-    return (
-      <section>
-        <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
-        <p className="text-muted-foreground">No data available for this period.</p>
-      </section>
-    );
-  }
-
-  const {
-    her_percent,
-    aifr_percent,
-    human_engaged_true,
-    total_engagements,
-    ai_forwarded,
-    total_forwarded,
-  } = engagementData;
-
   return (
     <section>
       <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div>
           <p className="text-sm text-muted-foreground">Human Engagement Rate</p>
-          <p className="text-lg font-medium">{her_percent}% ({human_engaged_true} of {total_engagements})</p>
+          <p className="text-lg font-medium">
+            {engagementData?.her_percent ?? "0.00"}% (
+            {engagementData?.human_engaged_true ?? 0} of{" "}
+            {engagementData?.total_engagements ?? 0})
+          </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">AI Forward Rate</p>
-          <p className="text-lg font-medium">{aifr_percent}% ({ai_forwarded} of {total_forwarded})</p>
+          <p className="text-lg font-medium">
+            {engagementData?.aifr_percent ?? "0.00"}% (
+            {engagementData?.ai_forwarded ?? 0} of{" "}
+            {engagementData?.total_forwarded ?? 0})
+          </p>
         </div>
       </div>
     </section>
