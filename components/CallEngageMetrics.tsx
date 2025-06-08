@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-export interface TopMetricsProps {
+type Props = {
   clientId: number;
   dateRange: DateRange | undefined;
-}
+};
 
 interface Metrics {
   her_percent: string | null;
   aifr_percent: string | null;
-  human_engaged_true: number;
-  total_engagements: number;
-  ai_forwarded: number;
-  total_forwarded: number;
+  human_engaged_true: number | null;
+  total_engagements: number | null;
+  ai_forwarded: number | null;
+  total_forwarded: number | null;
 }
 
 export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
