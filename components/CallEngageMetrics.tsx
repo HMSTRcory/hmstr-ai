@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-type Props = {
+type CallEngageMetricsProps = {
   clientId: number;
   dateRange: DateRange | undefined;
 };
