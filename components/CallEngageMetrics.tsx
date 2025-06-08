@@ -18,7 +18,7 @@ interface Metrics {
   total_forwarded: number | null;
 }
 
-export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
+export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMetricsProps) {
   const supabase = createClientComponentClient();
   const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
