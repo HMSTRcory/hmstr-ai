@@ -30,7 +30,7 @@ export default function TopMetrics({ clientId, dateRange }: TopMetricsProps) {
       const start = dateRange.from.toLocaleDateString('en-CA');
       const end = dateRange.to.toLocaleDateString('en-CA');
 
-      const { data, error } = await supabase.rpc('get_call_engagement_metrics', {
+      const { data, error } = await supabase.rpc('get_call_engagement_metrics_v2', {
         input_client_id: clientId,
         input_start_date: start,
         input_end_date: end,
