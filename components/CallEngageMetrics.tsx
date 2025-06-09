@@ -10,12 +10,12 @@ type Props = {
 };
 
 interface Metrics {
-  her_percent: number | null;
-  aifr_percent: number | null;
-  human_engaged_true: number | null;
-  total_engagements: number | null;
-  ai_forwarded: number | null;
-  total_forwarded: number | null;
+  her_percent: string | number | null;
+  aifr_percent: string | number | null;
+  human_engaged_true: number;
+  total_engagements: number;
+  ai_forwarded: number;
+  total_forwarded: number;
 }
 
 export default function CallEngageMetrics({ clientId, dateRange }: Props) {
