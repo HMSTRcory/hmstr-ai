@@ -4,73 +4,69 @@ import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-type CallEngageMetricsProps = {
+type Props = {
   clientId: number;
   dateRange: DateRange | undefined;
 };
 
 interface Metrics {
-  her_percent: string | null;
-  aifr_percent: string | null;
+  her_percent: number | null;
+  aifr_percent: number | null;
   human_engaged_true: number | null;
   total_engagements: number | null;
   ai_forwarded: number | null;
   total_forwarded: number | null;
 }
 
-export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMetricsProps) {
+export default function CallEngageMetrics({ clientId, dateRange }: Props) {
   const supabase = createClientComponentClient();
   const [data, setData] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!clientId) return;
+
     const fetchMetrics = async () => {
-      if (!dateRange?.from || !dateRange?.to || !clientId) return;
-
-      const start = dateRange.from.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      const end = dateRange.to.toLocaleDateString('en-CA');
-
-      const { data, error } = await supabase.rpc("get_call_engagement_metrics_v2", {
-        input_client_id: clientId,
-        input_start_date: dateRange?.from ? new Date(dateRange.from) : null,
-        input_end_date: dateRange?.to ? new Date(dateRange.to) : null,
-      });
+      const { data, error } = await supabase
+        .from('view_call_engagement_metrics_v2')
+        .select('*')
+        .eq('client_id', clientId)
+        .single();
 
       if (error) {
-        console.error('Supabase RPC Error:', error.message);
-        setData(null);
-      } else {
-        setData(data?.[0] || null);
+        console.error('Supabase View Fetch Error:', error);
       }
 
-      setLoading(false);
+      setData(data);
     };
 
     fetchMetrics();
-  }, [clientId, dateRange]);
-
-  const percentOrDash = (val: string | null) =>
-    val !== null ? `${parseFloat(val).toFixed(2)}%` : '-';
-
-  const ratioOrDash = (num: number | null, denom: number | null) =>
-    denom ? `${num} of ${denom}` : '0 of 0';
+  }, [clientId]);
 
   return (
-    <div className="bg-white text-black p-6 mt-4 rounded shadow">
-      <h2 className="text-xl font-semibold mb-2">Call Engagement Metrics</h2>
-      <p className="mb-2 text-gray-600">
-        {dateRange?.from?.toLocaleDateString()} - {dateRange?.to?.toLocaleDateString()}
-      </p>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <p>Human Engagement Rate: {percentOrDash(data?.her_percent ?? null)}</p>
-          <p>AI Forward Rate: {percentOrDash(data?.aifr_percent ?? null)}</p>
-          <p>Human Engaged: {ratioOrDash(data?.human_engaged_true ?? 0, data?.total_engagements ?? 0)}</p>
-          <p>AI Forwarded: {ratioOrDash(data?.ai_forwarded ?? 0, data?.total_forwarded ?? 0)}</p>
-        </>
-      )}
-    </div>
+    <section className="bg-white rounded-lg p-4 shadow-md space-y-4">
+      <h2 className="text-xl font-bold mb-2">Call Engagement Metrics</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div>
+          <p className="text-sm text-gray-500">Human Engagement Rate</p>
+          <p className="text-lg font-semibold">{data?.her_percent ?? '-'}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">AI Forward Rate</p>
+          <p className="text-lg font-semibold">{data?.aifr_percent ?? '-'}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Human Engaged</p>
+          <p className="text-lg font-semibold">
+            {data?.human_engaged_true ?? 0} of {data?.total_engagements ?? 0}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">AI Forwarded</p>
+          <p className="text-lg font-semibold">
+            {data?.ai_forwarded ?? 0} of {data?.total_forwarded ?? 0}
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
