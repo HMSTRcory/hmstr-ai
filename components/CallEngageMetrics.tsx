@@ -25,14 +25,24 @@ export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMet
   const [loading, setLoading] = useState(true);
 
 useEffect(() => {
+  console.log("CallEngageMetrics props:", { clientId, dateRange });
+
   const fetchData = async () => {
-    if (!clientId || !dateRange?.from || !dateRange?.to) return;
+    if (!clientId || !dateRange?.from || !dateRange?.to) {
+      console.warn("Missing clientId or dateRange input.");
+      return;
+    }
+
+    const formattedFrom = format(dateRange.from, "yyyy-MM-dd");
+    const formattedTo = format(dateRange.to, "yyyy-MM-dd");
+
+    console.log("Formatted Dates:", { formattedFrom, formattedTo });
 
     try {
       const { data, error } = await supabase.rpc("get_call_engagement_metrics_v2", {
         input_client_id: clientId,
-        input_start_date: format(dateRange.from, "yyyy-MM-dd"),
-        input_end_date: format(dateRange.to, "yyyy-MM-dd"),
+        input_start_date: formattedFrom,
+        input_end_date: formattedTo,
       });
 
       console.log("Engagement Metrics RPC Response:", data);
