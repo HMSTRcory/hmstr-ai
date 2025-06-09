@@ -3,87 +3,84 @@
 import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { format } from 'date-fns';
 
-type CallEngageMetricsProps = {
+type Props = {
   clientId: number;
   dateRange: DateRange | undefined;
 };
 
 interface Metrics {
-  her_percent: string | null;
-  aifr_percent: string | null;
+  her_percent: number | null;
+  aifr_percent: number | null;
   human_engaged_true: number | null;
   total_engagements: number | null;
   ai_forwarded: number | null;
   total_forwarded: number | null;
 }
 
-export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMetricsProps) {
+export default function CallEngageMetrics({ clientId, dateRange }: Props) {
   const supabase = createClientComponentClient();
   const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  console.log("CallEngageMetrics props:", { clientId, dateRange });
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (!clientId || !dateRange?.from || !dateRange?.to) return;
 
-  const fetchData = async () => {
-    if (!clientId || !dateRange?.from || !dateRange?.to) {
-      console.warn("Missing clientId or dateRange input.");
-      return;
-    }
-
-    const formattedFrom = format(dateRange.from, "yyyy-MM-dd");
-    const formattedTo = format(dateRange.to, "yyyy-MM-dd");
-
-    console.log("Formatted Dates:", { formattedFrom, formattedTo });
-
-    try {
-      const { data, error } = await supabase.rpc("get_call_engagement_metrics_v2", {
+      setLoading(true);
+      const { data, error } = await supabase.rpc('get_call_engagement_metrics_v2', {
         input_client_id: clientId,
-        input_start_date: formattedFrom,
-        input_end_date: formattedTo,
+        input_start_date: dateRange.from.toLocaleDateString('en-CA'),
+        input_end_date: dateRange.to.toLocaleDateString('en-CA'),
       });
 
-      console.log("Engagement Metrics RPC Response:", data);
-
       if (error) {
-        console.error("Supabase RPC error:", error.message);
+        setData(null);
       } else {
         setData(data?.[0] ?? null);
       }
-    } catch (err) {
-      console.error("Unexpected error fetching engagement metrics:", err);
-    } finally {
+
       setLoading(false);
-    }
-  };
+    };
 
-  fetchData();
-}, [clientId, dateRange]);
-
-  const formatCurrency = (value: number | null) =>
-    value !== null ? `$${Number(value).toFixed(2)}` : '-';
-
-  const formatRange = () => {
-    if (!dateRange?.from || !dateRange?.to) return '-';
-    const from = dateRange.from.toLocaleDateString();
-    const to = dateRange.to.toLocaleDateString();
-    return `${from} - ${to}`;
-  };
+    fetchMetrics();
+  }, [clientId, dateRange]);
 
   return (
-    <div className="bg-white text-black p-6 mt-4 rounded shadow">
-      <h2 className="text-xl font-semibold mb-2">Top Metrics</h2>
-      <p className="mb-2 text-gray-600">{formatRange()}</p>
+    <section>
+      <h2 className="text-xl font-semibold mb-2">Call Engagement Metrics</h2>
       {loading ? (
         <p>Loading...</p>
+      ) : data ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">Human Engagement Rate</p>
+            <p className="text-lg font-semibold">
+              {data.her_percent !== null ? `${data.her_percent}%` : '-'}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">AI Forward Rate</p>
+            <p className="text-lg font-semibold">
+              {data.aifr_percent !== null ? `${data.aifr_percent}%` : '-'}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">Human Engaged</p>
+            <p className="text-lg font-semibold">
+              {data.human_engaged_true ?? '-'} of {data.total_engagements ?? '-'}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">AI Forwarded</p>
+            <p className="text-lg font-semibold">
+              {data.ai_forwarded ?? '-'} of {data.total_forwarded ?? '-'}
+            </p>
+          </div>
+        </div>
       ) : (
-        <>
-          <p>HER: {data?.her_percent ?? '-'}</p>
-          <p>AIFR: {data?.aifr_percent ?? '-'}</p>
-        </>
+        <p>No data available.</p>
       )}
-    </div>
+    </section>
   );
 }
