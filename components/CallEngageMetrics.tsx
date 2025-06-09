@@ -56,25 +56,25 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
           <div className="bg-white rounded-xl shadow p-4">
             <p className="text-sm text-gray-500">Human Engagement Rate</p>
             <p className="text-lg font-semibold">
-              {data.her_percent !== null ? `${data.her_percent}%` : '-'}
+              {data?.her_percent !== null ? `${parseFloat(data.her_percent as string).toFixed(0)}%` : "-"}
             </p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <p className="text-sm text-gray-500">AI Forward Rate</p>
             <p className="text-lg font-semibold">
-              {data.aifr_percent !== null ? `${data.aifr_percent}%` : '-'}
+              {data?.aifr_percent !== null ? `${parseFloat(data.aifr_percent as string).toFixed(0)}%` : "-"}
             </p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <p className="text-sm text-gray-500">Human Engaged</p>
             <p className="text-lg font-semibold">
-              {data.human_engaged_true ?? '-'} of {data.total_engagements ?? '-'}
+              {data?.human_engaged_true !== null ? `${parseFloat(data.human_engaged_true as string).toFixed(0)}%` : "-"}
             </p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <p className="text-sm text-gray-500">AI Forwarded</p>
             <p className="text-lg font-semibold">
-              {data.ai_forwarded ?? '-'} of {data.total_forwarded ?? '-'}
+              {data?.ai_forwarded !== null ? `${parseFloat(data.ai_forwarded as string).toFixed(0)}%` : "-"}
             </p>
           </div>
         </div>
