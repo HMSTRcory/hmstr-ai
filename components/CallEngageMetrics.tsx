@@ -30,10 +30,10 @@ export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMet
       const start = dateRange.from.toLocaleDateString('en-CA'); // YYYY-MM-DD
       const end = dateRange.to.toLocaleDateString('en-CA');
 
-      const { data, error } = await supabase.rpc('get_call_engagement_metrics_v2', {
+      const { data, error } = await supabase.rpc("get_call_engagement_metrics_v2", {
         input_client_id: clientId,
-        input_start_date: start,
-        input_end_date: end,
+        input_start_date: new Date(dateRange.from as Date),
+        input_end_date: new Date(dateRange.to as Date),
       });
 
       if (error) {
