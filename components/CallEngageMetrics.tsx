@@ -25,30 +25,42 @@ export default function CallEngageMetrics({ clientId, dateRange }: CallEngageMet
   const [loading, setLoading] = useState(true);
 
 useEffect(() => {
-    const fetchMetrics = async () => {
-      if (!dateRange?.from || !dateRange?.to) return;
+  console.log("CallEngageMetrics props:", { clientId, dateRange });
 
-      const start = dateRange.from.toLocaleDateString('en-CA');
-      const end = dateRange.to.toLocaleDateString('en-CA');
+  const fetchData = async () => {
+    if (!clientId || !dateRange?.from || !dateRange?.to) {
+      console.warn("Missing clientId or dateRange input.");
+      return;
+    }
 
-      const { data, error } = await supabase.rpc('get_top_metrics', {
+    const formattedFrom = format(dateRange.from, "yyyy-MM-dd");
+    const formattedTo = format(dateRange.to, "yyyy-MM-dd");
+
+    console.log("Formatted Dates:", { formattedFrom, formattedTo });
+
+    try {
+      const { data, error } = await supabase.rpc("get_call_engagement_metrics_v2", {
         input_client_id: clientId,
-        input_start_date: start,
-        input_end_date: end,
+        input_start_date: formattedFrom,
+        input_end_date: formattedTo,
       });
 
+      console.log("Engagement Metrics RPC Response:", data);
+
       if (error) {
-        console.error('Supabase RPC Error:', error.message);
-        setData(null);
+        console.error("Supabase RPC error:", error.message);
       } else {
-        setData(data?.[0] || null);
+        setData(data?.[0] ?? null);
       }
-
+    } catch (err) {
+      console.error("Unexpected error fetching engagement metrics:", err);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchMetrics();
-  }, [clientId, dateRange]);
+  fetchData();
+}, [clientId, dateRange]);
 
   const formatCurrency = (value: number | null) =>
     value !== null ? `$${Number(value).toFixed(2)}` : '-';
