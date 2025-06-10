@@ -11,9 +11,10 @@ type Props = {
 };
 
 interface EngagementRow {
+  client_id: number;
   action_date: string;
-  her_percent: number | null;
-  aifr_percent: number | null;
+  her_percent: number;
+  aifr_percent: number;
   human_engaged_true: number;
   total_engagements: number;
   ai_forwarded: number;
@@ -23,39 +24,34 @@ interface EngagementRow {
 export default function CallEngageMetrics({ clientId, dateRange }: Props) {
   const supabase = createClientComponentClient();
   const [rows, setRows] = useState<EngagementRow[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchMetrics() {
+    const fetchData = async () => {
       if (!clientId || !dateRange?.from || !dateRange?.to) return;
-      setLoading(true);
 
-      const from = format(dateRange.from, 'yyyy-MM-dd');
-      const to = format(dateRange.to, 'yyyy-MM-dd');
+      const formattedFrom = format(dateRange.from, 'yyyy-MM-dd');
+      const formattedTo = format(dateRange.to, 'yyyy-MM-dd');
 
       const { data, error } = await supabase
         .from('view_call_engagement_metrics_v2')
         .select('*')
         .eq('client_id', clientId)
-        .gte('action_date', from)
-        .lte('action_date', to);
+        .gte('action_date', formattedFrom)
+        .lte('action_date', formattedTo);
 
       if (error) {
-        console.error('Error fetching engagement metrics:', error);
-        setRows([]);
-      } else {
-        setRows(data);
+        console.error('Supabase fetch error:', error);
+        return;
       }
 
-      setLoading(false);
-    }
+      setRows(data as EngagementRow[]);
+    };
 
-    fetchMetrics();
+    fetchData();
   }, [clientId, dateRange]);
 
-  // Aggregate values from rows
   const sum = (key: keyof EngagementRow) =>
-    rows.reduce((acc, row) => acc + Number(row[key] ?? 0), 0);
+    rows.reduce((acc, row) => acc + (Number(row[key]) || 0), 0);
 
   const totalEngagements = sum('total_engagements');
   const humanEngaged = sum('human_engaged_true');
@@ -63,39 +59,41 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
   const totalForwarded = sum('total_forwarded');
 
   const herPercent =
-    totalEngagements > 0 ? ((humanEngaged / totalEngagements) * 100).toFixed(2) : '-';
+    totalEngagements > 0
+      ? `${((humanEngaged / totalEngagements) * 100).toFixed(2)}%`
+      : '-';
+
   const aifrPercent =
-    totalForwarded > 0 ? ((aiForwarded / totalForwarded) * 100).toFixed(2) : '-';
+    totalForwarded > 0
+      ? `${((aiForwarded / totalForwarded) * 100).toFixed(2)}%`
+      : '-';
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow space-y-4">
+    <section className="space-y-4">
       <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <div className="text-sm text-gray-500">Human Engagement Rate</div>
-            <div className="text-2xl font-bold">{herPercent}%</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">AI Forward Rate</div>
-            <div className="text-2xl font-bold">{aifrPercent}%</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">Human Engaged</div>
-            <div className="text-xl">
-              {humanEngaged} of {totalEngagements}
-            </div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">AI Forwarded</div>
-            <div className="text-xl">
-              {aiForwarded} of {totalForwarded}
-            </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <div className="text-sm text-muted-foreground">Human Engagement Rate</div>
+          <div className="text-2xl font-bold">{herPercent}</div>
+        </div>
+        <div>
+          <div className="text-sm text-muted-foreground">AI Forward Rate</div>
+          <div className="text-2xl font-bold">{aifrPercent}</div>
+        </div>
+        <div>
+          <div className="text-sm text-muted-foreground">Human Engaged</div>
+          <div className="text-lg">
+            {humanEngaged} of {totalEngagements}
           </div>
         </div>
-      )}
+        <div>
+          <div className="text-sm text-muted-foreground">AI Forwarded</div>
+          <div className="text-lg">
+            {aiForwarded} of {totalForwarded}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
