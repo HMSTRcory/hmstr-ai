@@ -55,7 +55,7 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
 
   // Aggregate
   const sum = (key: keyof EngagementRow) =>
-    rows.reduce((acc, row) => acc + (row[key] || 0), 0);
+    rows.reduce((acc, row) => acc + Number(row[key] ?? 0), 0);
 
   const totalEngagements = sum('total_engagements');
   const humanEngaged = sum('human_engaged_true');
