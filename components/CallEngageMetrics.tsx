@@ -53,7 +53,7 @@ export default function CallEngageMetrics({ clientId, dateRange }: Props) {
     fetchMetrics();
   }, [clientId, dateRange]);
 
-  // Aggregate
+  // Aggregate values from rows
   const sum = (key: keyof EngagementRow) =>
     rows.reduce((acc, row) => acc + Number(row[key] ?? 0), 0);
 
