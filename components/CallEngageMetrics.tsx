@@ -4,108 +4,97 @@ import { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { format } from 'date-fns';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
 
 type Props = {
   clientId: number;
   dateRange: DateRange | undefined;
 };
 
-interface MetricsRow {
+interface EngagementRow {
   action_date: string;
   her_percent: number | null;
   aifr_percent: number | null;
-  human_engaged_true: number | null;
-  total_engagements: number | null;
-  ai_forwarded: number | null;
-  total_forwarded: number | null;
+  human_engaged_true: number;
+  total_engagements: number;
+  ai_forwarded: number;
+  total_forwarded: number;
 }
 
 export default function CallEngageMetrics({ clientId, dateRange }: Props) {
   const supabase = createClientComponentClient();
-  const [metrics, setMetrics] = useState<MetricsRow[]>([]);
+  const [rows, setRows] = useState<EngagementRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!clientId || !dateRange?.from || !dateRange?.to) return;
+    async function fetchMetrics() {
+      if (!clientId || !dateRange?.from || !dateRange?.to) return;
+      setLoading(true);
 
-    const formattedFrom = format(dateRange.from, 'yyyy-MM-dd');
-    const formattedTo = format(dateRange.to, 'yyyy-MM-dd');
+      const from = format(dateRange.from, 'yyyy-MM-dd');
+      const to = format(dateRange.to, 'yyyy-MM-dd');
 
-    const fetchMetrics = async () => {
       const { data, error } = await supabase
         .from('view_call_engagement_metrics_v2')
         .select('*')
         .eq('client_id', clientId)
-        .gte('action_date', formattedFrom)
-        .lte('action_date', formattedTo)
-        .order('action_date', { ascending: true });
+        .gte('action_date', from)
+        .lte('action_date', to);
 
       if (error) {
-        console.error('Supabase View Fetch Error:', error);
+        console.error('Error fetching engagement metrics:', error);
+        setRows([]);
       } else {
-        setMetrics(data || []);
+        setRows(data);
       }
-    };
+
+      setLoading(false);
+    }
 
     fetchMetrics();
   }, [clientId, dateRange]);
 
-  const latest = metrics[metrics.length - 1];
+  // Aggregate
+  const sum = (key: keyof EngagementRow) =>
+    rows.reduce((acc, row) => acc + (row[key] || 0), 0);
+
+  const totalEngagements = sum('total_engagements');
+  const humanEngaged = sum('human_engaged_true');
+  const aiForwarded = sum('ai_forwarded');
+  const totalForwarded = sum('total_forwarded');
+
+  const herPercent =
+    totalEngagements > 0 ? ((humanEngaged / totalEngagements) * 100).toFixed(2) : '-';
+  const aifrPercent =
+    totalForwarded > 0 ? ((aiForwarded / totalForwarded) * 100).toFixed(2) : '-';
 
   return (
-    <section className="bg-white rounded-lg p-4 shadow-md space-y-6">
-      <h2 className="text-xl font-bold">Call Engagement Metrics</h2>
-
-      {latest && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <section className="bg-white p-6 rounded-xl shadow space-y-4">
+      <h2 className="text-xl font-semibold">Call Engagement Metrics</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-500">Human Engagement Rate</p>
-            <p className="text-lg font-semibold">
-              {latest.her_percent != null ? `${latest.her_percent}%` : '-'}
-            </p>
+            <div className="text-sm text-gray-500">Human Engagement Rate</div>
+            <div className="text-2xl font-bold">{herPercent}%</div>
           </div>
           <div>
-            <p className="text-sm text-gray-500">AI Forward Rate</p>
-            <p className="text-lg font-semibold">
-              {latest.aifr_percent != null ? `${latest.aifr_percent}%` : '-'}
-            </p>
+            <div className="text-sm text-gray-500">AI Forward Rate</div>
+            <div className="text-2xl font-bold">{aifrPercent}%</div>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Human Engaged</p>
-            <p className="text-lg font-semibold">
-              {latest.human_engaged_true ?? 0} of {latest.total_engagements ?? 0}
-            </p>
+            <div className="text-sm text-gray-500">Human Engaged</div>
+            <div className="text-xl">
+              {humanEngaged} of {totalEngagements}
+            </div>
           </div>
           <div>
-            <p className="text-sm text-gray-500">AI Forwarded</p>
-            <p className="text-lg font-semibold">
-              {latest.ai_forwarded ?? 0} of {latest.total_forwarded ?? 0}
-            </p>
+            <div className="text-sm text-gray-500">AI Forwarded</div>
+            <div className="text-xl">
+              {aiForwarded} of {totalForwarded}
+            </div>
           </div>
         </div>
-      )}
-
-      {metrics.length > 1 && (
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={metrics}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="action_date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="her_percent" stroke="#8884d8" name="HER %" />
-            <Line type="monotone" dataKey="aifr_percent" stroke="#82ca9d" name="AIFR %" />
-          </LineChart>
-        </ResponsiveContainer>
       )}
     </section>
   );
